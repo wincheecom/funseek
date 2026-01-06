@@ -1,3 +1,4 @@
+require('dotenv').config(); // 加载环境变量
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -59,7 +60,7 @@ app.get('/adminer', (req, res) => {
 
 // Route to serve the main HTML file
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '6.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // API routes for products

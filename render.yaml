@@ -7,30 +7,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DB_HOST
-        fromDatabase:
-          name: funseek-db
-          property: host
-      - key: DB_USER
-        fromDatabase:
-          name: funseek-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: funseek-db
-          property: password
-      - key: DB_NAME
-        fromDatabase:
-          name: funseek-db
-          property: database
-      - key: DB_PORT
-        fromDatabase:
-          name: funseek-db
-          property: port
+      - key: NETLIFY_DATABASE_URL
+        sync: false  # 在部署时手动设置为 Neon 数据库连接字符串
 
-
-databases:
-  - name: funseek-db
-    region: singapore
-    databaseName: funseek
-    user: postgres
+# 注意：由于 Neon 数据库在 Render 之外托管，您需要手动设置 NETLIFY_DATABASE_URL 环境变量
+# 在 Render 仪表板中，将您的 Neon 数据库连接字符串设置为 NETLIFY_DATABASE_URL

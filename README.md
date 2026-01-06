@@ -1,66 +1,59 @@
-# Funseek Shipment Management System
+# Funseek Shipment Management System with Neon Database
 
-这是一个基于 Web 的发货管理系统，用于管理产品和发货任务，使用 PostgreSQL 作为数据库。
+[![Netlify Status](https://api.netlify.com/api/v1/badges/945a3849-9c99-4889-a0a5-5756a29d1046/deploy-status)](https://app.netlify.com/projects/fanqu/deploys)
 
-## 功能特性
+这是一个使用 Neon 无服务器数据库的货运管理系统。
 
-- 产品管理：添加、编辑、删除产品
-- 发货任务管理：创建、处理、完成发货任务
-- 库存管理：实时跟踪产品库存
-- 数据统计：发货统计和分析
-- 数据库管理：通过 Adminer 管理 PostgreSQL 数据库
+## 安装和设置
 
-## 部署到 Render
-
-1. Fork 这个仓库到你的 GitHub 账户
-2. 登录 Render 账户
-3. 点击 "New +" 按钮，选择 "Web Service"
-4. 选择你刚刚 fork 的仓库
-5. Render 会自动检测到 `render.yaml` 配置文件，该文件配置了 PostgreSQL 数据库
-6. 点击 "Create Web Service" 开始部署
-
-## 本地运行
-
-如果你想在本地运行这个应用（需要先安装 PostgreSQL）：
-
-1. 确保你已经安装了 Node.js 和 PostgreSQL
-2. 克隆或下载这个仓库
-3. 在 PostgreSQL 中创建数据库：
-
-```sql
-CREATE DATABASE funseek;
-```
-
-4. 在项目根目录运行：
-
+1. 首先安装项目依赖：
 ```bash
 npm install
+```
+
+2. 配置环境变量：
+   - 复制 `.env` 文件并根据您的 Neon 数据库配置进行修改
+   - 在 `.env` 文件中设置 `NETLIFY_DATABASE_URL` 为您的 Neon 数据库连接字符串
+
+3. 启动开发服务器：
+```bash
+npm run dev
+```
+
+4. 或者启动生产服务器：
+```bash
 npm start
 ```
 
-5. 打开浏览器访问 `http://localhost:3000`
+## 使用 Neon 数据库
 
-## 数据库管理
+本项目已配置为使用 Neon 无服务器数据库，具有以下优势：
+- 自动扩展
+- 按使用量计费
+- 与 PostgreSQL 完全兼容
+- 更好的性能和更低的成本
 
-- 访问 `/adminer` 路径进入 Adminer 界面（需要单独部署 Adminer 或使用本地工具）
-- 或使用你喜欢的 PostgreSQL 客户端连接数据库
+## API 端点
 
-## 登录信息
+- `GET /api/products` - 获取所有产品
+- `POST /api/products` - 创建新产品
+- `PUT /api/products/:id` - 更新产品
+- `DELETE /api/products/:id` - 删除产品
+- `GET /api/tasks` - 获取所有任务
+- `POST /api/tasks` - 创建新任务
+- `PUT /api/tasks/:id` - 更新任务
+- `DELETE /api/tasks/:id` - 删除任务
+- `GET /api/history` - 获取历史记录
+- `GET /api/activities` - 获取活动记录
+- `GET /adminer` - 数据库管理界面
 
-- 管理员账户：admin / 123456
-- 销售运营：sales / 123456
-- 仓库管理：warehouse / 123456
+## 部署到 Netlify
 
-## 技术栈
+如果要部署到 Netlify，确保在 Netlify 控制台中设置了 `DATABASE_URL` 环境变量。
 
-- 前端：HTML, CSS, JavaScript
-- 后端：Node.js + Express
-- 数据库：PostgreSQL
-- 数据库管理：Adminer
+## 重要说明
 
-## API 接口
-
-- 获取产品列表：GET /api/products
-- 添加产品：POST /api/products
-- 获取任务列表：GET /api/tasks
-- 添加任务：POST /api/tasks
+在使用此项目之前，请确保：
+1. 已在 Neon 上创建了数据库
+2. 已将正确的连接字符串添加到环境变量中
+3. 数据库具有所需的表结构（服务器启动时会自动创建）

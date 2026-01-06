@@ -2223,18 +2223,28 @@
             }
             
             static async updateTask(taskId, updates) {
-                const tasks = this.getAllTasks();
-                const taskIndex = tasks.findIndex(t => t.id === taskId);
-                if (taskIndex !== -1) {
-                    tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
-                    this.saveTasks(tasks);
+                try {
+                    const response = await fetch(`${this.API_BASE}/api/tasks/${taskId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updates)
+                    });
+                    
+                    if (!response.ok) {
+                        console.error('更新任务失败:', response.statusText);
+                        return false;
+                    }
+                    
                     return true;
+                } catch (error) {
+                    console.error('更新任务失败:', error);
+                    return false;
                 }
-                return false;
             }
             
-            static deleteTask(taskId) {
-                const tasks = this.getAllTasks();
+            static async deleteTask(taskId) {
                 try {
                     const response = await fetch(`${this.API_BASE}/api/tasks/${taskId}`, {
                         method: 'DELETE'
@@ -2593,7 +2603,9 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             initLogin();
-            checkLoginStatus();
+            (async function() {
+                await checkLoginStatus();
+            })();
         });
 
         // ============================================
@@ -2628,14 +2640,14 @@
             });
         }
         
-        function checkLoginStatus() {
+        async function checkLoginStatus() {
             const savedUser = DataManager.getCurrentUser();
             if (savedUser && users[savedUser.username]) {
-                loginUser(savedUser.username);
+                await loginUser(savedUser.username);
             }
         }
 
-        function loginUser(username) {
+        async function loginUser(username) {
             const user = {
                 username: username,
                 name: users[username].name,
@@ -2650,13 +2662,13 @@
             document.getElementById('mainSystem').style.display = 'block';
             
             // 初始化主系统
-            initMainSystem();
+            await initMainSystem();
         }
 
         // ============================================
         // 主系统
         // ============================================
-        function initMainSystem() {
+        async function initMainSystem() {
             const user = DataManager.getCurrentUser();
             
             // 设置用户信息
@@ -2675,7 +2687,7 @@
             });
             
             // 初始化各模块
-            initDashboard();
+            await initDashboard();
             
             // 响应式菜单切换
             document.getElementById('menuToggle').addEventListener('click', function() {
@@ -2713,7 +2725,7 @@
             const menuLinks = document.querySelectorAll('.menu-link');
             
             menuLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
+                link.addEventListener('click', async function(e) {
                     e.preventDefault();
                     
                     // 更新活动菜单
@@ -2722,7 +2734,7 @@
                     
                     // 切换模块
                     const moduleId = this.getAttribute('data-module');
-                    switchModule(moduleId);
+                    await switchModule(moduleId);
                     
                     // 更新当前模块标题
                     document.getElementById('currentModule').textContent = modules[moduleId].name;
@@ -2735,7 +2747,7 @@
             });
         }
 
-        function switchModule(moduleId) {
+        async function switchModule(moduleId) {
             // 隐藏所有模块
             const moduleContents = document.querySelectorAll('.module-content');
             moduleContents.forEach(content => content.classList.remove('active'));
@@ -2746,7 +2758,7 @@
             // 根据模块初始化
             switch(moduleId) {
                 case 'dashboard':
-                    updateDashboard();
+                    await updateDashboard();
                     break;
                 case 'product-add':
                     initProductAddModule();
@@ -2766,50 +2778,51 @@
         // ============================================
         // 总览模块
         // ============================================
-        function initDashboard() {
-            updateDashboard();
+        async function initDashboard() {
+            await updateDashboard();
         }
 
-        function updateDashboard() {
-            const products = DataManager.getAllProducts();
-            const tasks = DataManager.getAllTasks();
-            const history = DataManager.getHistory();
-            const activities = DataManager.getActivities();
+        async function updateDashboard() {
+            const products = await DataManager.getAllProducts();
+            const tasks = await DataManager.getAllTasks();
+            const history = await DataManager.getHistory();
+            const activities = await DataManager.getActivities();
             
             document.getElementById('totalProducts').textContent = products.length;
             
-            const pendingTasksCount = tasks.filter(t => t.status === 'pending').length;
+            // 确保 tasks 是一个数组后再使用 filter 方法
+            const pendingTasksCount = Array.isArray(tasks) ? tasks.filter(t => t.status === 'pending').length : 0;
             document.getElementById('pendingTasks').textContent = pendingTasksCount;
             
-            const completedCount = history.length;
+            const completedCount = Array.isArray(history) ? history.length : 0;
             document.getElementById('completedTasks').textContent = completedCount;
             
             const today = new Date().toDateString();
-            const todayTasks = tasks.filter(t => {
+            const todayTasks = Array.isArray(tasks) ? tasks.filter(t => {
                 const taskDate = new Date(t.createdAt).toDateString();
                 return taskDate === today;
-            }).length;
+            }).length : 0;
             document.getElementById('todayTasks').textContent = todayTasks;
             
             updateRecentActivities(activities);
-            updateWarehouseStats();
+            await updateWarehouseStats();
         }
 
-        function updateWarehouseStats() {
-            const tasks = DataManager.getAllTasks();
-            const history = DataManager.getHistory();
+        async function updateWarehouseStats() {
+            const tasks = await DataManager.getAllTasks();
+            const history = await DataManager.getHistory();
             
-            const pendingTasksCount = tasks.filter(t => t.status === 'pending').length;
+            const pendingTasksCount = Array.isArray(tasks) ? tasks.filter(t => t.status === 'pending').length : 0;
             document.getElementById('warehousePendingTasks').textContent = pendingTasksCount;
             
             const today = new Date().toDateString();
-            const todayTasks = tasks.filter(t => {
+            const todayTasks = Array.isArray(tasks) ? tasks.filter(t => {
                 const taskDate = new Date(t.createdAt).toDateString();
                 return taskDate === today;
-            }).length;
+            }).length : 0;
             document.getElementById('warehouseTodayTasks').textContent = todayTasks;
             
-            document.getElementById('warehouseCompletedTasks').textContent = history.length;
+            document.getElementById('warehouseCompletedTasks').textContent = Array.isArray(history) ? history.length : 0;
         }
 
         function updateRecentActivities(activities) {
@@ -3466,14 +3479,14 @@
         }
 
         function addToTaskFromList(productId) {
-            switchModule('sales-operations');
-            
-            setTimeout(() => {
-                const product = DataManager.getAllProducts().find(p => p.id === productId);
-                if (product) {
-                    selectSingleProduct(product.id, product.name, product.code, product.image);
-                }
-            }, 100);
+            switchModule('sales-operations').then(() => {
+                setTimeout(() => {
+                    const product = DataManager.getAllProducts().find(p => p.id === productId);
+                    if (product) {
+                        selectSingleProduct(product.id, product.name, product.code, product.image);
+                    }
+                }, 100);
+            });
         }
 
         // ============================================
@@ -4086,6 +4099,36 @@
             `;
         }
 
+        function toggleProductSelection(productId, productName, productCode, productImage) {
+            // 在当前实现中，我们只选择一个产品
+            if (selectedProduct && selectedProduct.id === productId) {
+                // 如果点击的是已选中的产品，则取消选择
+                selectedProduct = null;
+                taskCart = [];
+            } else {
+                // 选择新的产品，替换之前的选择
+                selectedProduct = {
+                    id: productId,
+                    name: productName,
+                    code: productCode,
+                    image: productImage
+                };
+                
+                // 更新购物车，只包含当前选中的产品
+                taskCart = [{
+                    productId: productId,
+                    productName: productName,
+                    productCode: productCode,
+                    productImage: productImage,
+                    quantity: 1
+                }];
+            }
+            
+            updateMultiselectDropdown();
+            updateSelectedTags();
+            updateTaskCart();
+        }
+        
         function removeSelectedProduct() {
             selectedProduct = null;
             taskCart = [];
@@ -4276,12 +4319,12 @@
             alertify.alert('任务详情', detailHtml);
         }
 
-        function deleteSalesTask(taskId) {
+        async function deleteSalesTask(taskId) {
             if (!confirm('确定要删除这个已发布的任务吗？')) {
                 return;
             }
             
-            const success = DataManager.deleteTask(taskId);
+            const success = await DataManager.deleteTask(taskId);
             if (success) {
                 Utils.showAlert('任务删除成功！', 'success', function() {
                     updateDashboard();
@@ -4554,12 +4597,12 @@
             loadWarehouseTasksList();
         }
 
-        function deleteWarehouseTask(taskId) {
+        async function deleteWarehouseTask(taskId) {
             if (!confirm('确定要删除这个待发货任务吗？删除后商品库存将恢复。')) {
                 return;
             }
             
-            const success = DataManager.deleteTask(taskId);
+            const success = await DataManager.deleteTask(taskId);
             if (success) {
                 Utils.showAlert('任务删除成功！商品库存已恢复。', 'success', function() {
                     if (expandedTaskId === taskId) {
@@ -4572,7 +4615,7 @@
             }
         }
 
-        function completeShipment(taskId) {
+        async function completeShipment(taskId) {
             if (!confirm('确定要标记此任务为"已完成"吗？')) {
                 return;
             }
@@ -4583,8 +4626,8 @@
             });
             
             if (success) {
-                const task = DataManager.getTaskById(taskId);
-                const products = DataManager.getAllProducts();
+                const task = await DataManager.getTaskById(taskId);
+                const products = await DataManager.getAllProducts();
                 const taskWithPrice = {
                     ...task,
                     items: task.items.map(item => {
@@ -4596,9 +4639,9 @@
                         };
                     })
                 };
-                DataManager.addToHistory(taskWithPrice);
+                await DataManager.addToHistory(taskWithPrice);
                 
-                DataManager.deleteTask(taskId);
+                await DataManager.deleteTask(taskId);
                 
                 Utils.showAlert('任务已完成发货！', 'success', function() {
                     expandedTaskId = null;
